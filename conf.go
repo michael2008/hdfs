@@ -26,6 +26,8 @@ type propertyList struct {
 // pairs found in a user's hadoop configuration files.
 type HadoopConf map[string]string
 
+var defaultFS string
+
 var errUnresolvedDefaultFS = errors.New("no defaultFS in configuration")
 var errUnresolvedNamenode = errors.New("no namenode address in configuration")
 
@@ -66,18 +68,24 @@ func LoadHadoopConf(path string) HadoopConf {
 
 // Namenodes returns the namenode hosts present in the configuration. The
 // returned slice will be sorted and deduped.
-func (conf HadoopConf) Namenodes() ([]string, error) {
+func (conf HadoopConf) Namenodes(givenFS string) ([]string, error) {
 	nns := make(map[string]bool)
 	var defaultFsName string
-	// find fs name first
-	for key, value := range conf {
-		if key == "fs.defaultFS" {
-			defaultFsName = strings.TrimPrefix(value, "hdfs://")
+	if givenFS == "" {
+		// find fs name first
+		for key, value := range conf {
+			if key == "fs.defaultFS" {
+				defaultFsName = strings.TrimPrefix(value, "hdfs://")
+			}
 		}
+		if defaultFsName == "" {
+			return nil, errUnresolvedDefaultFS
+		}
+		defaultFS = defaultFsName
+	} else {
+		defaultFS = givenFS
 	}
-	if defaultFsName == "" {
-		return nil, errUnresolvedDefaultFS
-	}
+
 	// extract default FS cluster
 	for key, value := range conf {
 		k := fmt.Sprintf("dfs.namenode.rpc-address.%s.", defaultFsName)
@@ -97,4 +105,8 @@ func (conf HadoopConf) Namenodes() ([]string, error) {
 
 	sort.Strings(keys)
 	return keys, nil
+}
+
+func GetDefaultFS() string {
+	return defaultFS
 }

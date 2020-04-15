@@ -21,6 +21,7 @@ type ClientOptions struct {
 	Addresses []string
 	Namenode  *rpc.NamenodeConnection
 	User      string
+	FS        string
 }
 
 // Username returns the value of HADOOP_USER_NAME in the environment, or
@@ -50,7 +51,7 @@ func NewClient(options ClientOptions) (*Client, error) {
 	}
 
 	if options.Addresses == nil || len(options.Addresses) == 0 {
-		options.Addresses, err = getNameNodeFromConf()
+		options.Addresses, err = getNameNodeFromConf(options.FS)
 		if err != nil {
 			return nil, err
 		}
@@ -86,10 +87,10 @@ func New(address string) (*Client, error) {
 }
 
 // getNameNodeFromConf returns namenodes from the system Hadoop configuration.
-func getNameNodeFromConf() ([]string, error) {
+func getNameNodeFromConf(givenFS string) ([]string, error) {
 	hadoopConf := LoadHadoopConf("")
 
-	namenodes, nnErr := hadoopConf.Namenodes()
+	namenodes, nnErr := hadoopConf.Namenodes(givenFS)
 	if nnErr != nil {
 		return nil, nnErr
 	}
