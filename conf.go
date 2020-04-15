@@ -3,8 +3,8 @@ package hdfs
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -26,6 +26,7 @@ type propertyList struct {
 // pairs found in a user's hadoop configuration files.
 type HadoopConf map[string]string
 
+var errUnresolvedDefaultFS = errors.New("no defaultFS in configuration")
 var errUnresolvedNamenode = errors.New("no namenode address in configuration")
 
 // LoadHadoopConf returns a HadoopConf object representing configuration from
@@ -67,11 +68,20 @@ func LoadHadoopConf(path string) HadoopConf {
 // returned slice will be sorted and deduped.
 func (conf HadoopConf) Namenodes() ([]string, error) {
 	nns := make(map[string]bool)
+	var defaultFsName string
+	// find fs name first
 	for key, value := range conf {
-		if strings.Contains(key, "fs.default") {
-			nnUrl, _ := url.Parse(value)
-			nns[nnUrl.Host] = true
-		} else if strings.HasPrefix(key, "dfs.namenode.rpc-address") {
+		if key == "fs.defaultFS" {
+			defaultFsName = strings.TrimPrefix(value, "hdfs://")
+		}
+	}
+	if defaultFsName == "" {
+		return nil, errUnresolvedDefaultFS
+	}
+	// extract default FS cluster
+	for key, value := range conf {
+		k := fmt.Sprintf("dfs.namenode.rpc-address.%s.", defaultFsName)
+		if strings.HasPrefix(key, k) {
 			nns[value] = true
 		}
 	}
