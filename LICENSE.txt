@@ -1,4 +1,4 @@
-Copyright (c) 2014 Colin Marc (colinmarc@gmail.com)
+Copyright (c) 2014 Colin Marc (michael2008@gmail.com)
 
 MIT License
 

@@ -3,8 +3,8 @@ package hdfs
 import (
 	"errors"
 
-	hdfs "github.com/colinmarc/hdfs/protocol/hadoop_hdfs"
-	"github.com/colinmarc/hdfs/rpc"
+	hdfs "github.com/michael2008/hdfs/protocol/hadoop_hdfs"
+	"github.com/michael2008/hdfs/rpc"
 )
 
 var StatFsError = errors.New("Failed to get HDFS usage")
