@@ -87,8 +87,8 @@ func (conf HadoopConf) Namenodes(givenFS string) ([]string, error) {
 	}
 
 	// extract default FS cluster
+	k := fmt.Sprintf("dfs.namenode.rpc-address.%s.", defaultFS)
 	for key, value := range conf {
-		k := fmt.Sprintf("dfs.namenode.rpc-address.%s.", defaultFsName)
 		if strings.HasPrefix(key, k) {
 			nns[value] = true
 		}
